@@ -18,11 +18,35 @@ enum GameState {
     case tie
 }
 
+struct GameStats {
+    var xWins: Int = 0
+    var oWins: Int = 0
+    var ties: Int = 0
+    var totalGames: Int = 0
+    
+    var gamesPlayed: String {
+        return "\(totalGames)"
+    }
+    
+    var winPercentageX: String {
+        guard totalGames > 0 else { return "0%" }
+        let percentage = (Double(xWins) / Double(totalGames)) * 100
+        return String(format: "%.0f%%", percentage)
+    }
+    
+    var winPercentageO: String {
+        guard totalGames > 0 else { return "0%" }
+        let percentage = (Double(oWins) / Double(totalGames)) * 100
+        return String(format: "%.0f%%", percentage)
+    }
+}
+
 class GameLogic: ObservableObject {
     @Published var board: [[Player?]] = Array(repeating: Array(repeating: nil, count: 3), count: 3)
     @Published var currentPlayer: Player = .x
     @Published var gameState: GameState = .ongoing
     @Published var winningCells: [(Int, Int)] = []
+    @Published var stats = GameStats()
     
     func makeMove(row: Int, col: Int) {
         guard gameState == .ongoing && board[row][col] == nil else { return }
@@ -31,8 +55,16 @@ class GameLogic: ObservableObject {
         
         if let winner = checkWinner() {
             gameState = .winner(winner)
+            stats.totalGames += 1
+            if winner == .x {
+                stats.xWins += 1
+            } else {
+                stats.oWins += 1
+            }
         } else if isBoardFull() {
             gameState = .tie
+            stats.totalGames += 1
+            stats.ties += 1
         } else {
             currentPlayer = currentPlayer == .x ? .o : .x
         }
